@@ -11,7 +11,6 @@ all: main
 main: $(OBJ_FILES)
 	echo $(SRC)
 	gcc $(CFLAGS) -MMD -MP -o $(OUT_FILE) $^
-	#gcc $(CPPFLAGS) -o $(OBJ) $^
 	
 -include $(OBJ_FILES:%.o=%.d)
 
