@@ -8,7 +8,7 @@ char *stdin_read_line_dynamic(void)
 {
 	char *dst = NULL;
 	size_t bytes_allocated = 0;
-	unsigned int bytes_read = getline(&dst, &bytes_allocated, stdin);
+	size_t bytes_read = getline(&dst, &bytes_allocated, stdin);
 	return dst;
 }
 	
