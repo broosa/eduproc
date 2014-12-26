@@ -98,7 +98,24 @@ void cpu_monitor_start(void)
 			}
 			_display_dump(monitor_offset, dump_size);
 			break;
+			
+		case 'w':
+			/*char cmd_str_copy[strlen(command)];
 
+			strcpy(cmd_str_copy, command);
+
+			//Discard the first token of the copied string
+			strtok(cmd_str_copy, " ");
+			int arg_count = 0;
+
+			//Count the number of arguments
+			while (strtok(NULL, " ") != null)
+			{
+				arg_count++;
+				}*/
+
+			break;
+						
 		case 'q':
 			return;
 				

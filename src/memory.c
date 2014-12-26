@@ -1,5 +1,10 @@
 #include <string.h>
+#include <stdlib.h>
+#include <time.h>
+
 #include "memory.h"
+
+#define _DBG_FILL_MEMORY
 
 //Declared in memory.h
 
@@ -95,7 +100,20 @@ int cpu_mem_read_multiple(unsigned char *dest, unsigned int offset, unsigned int
 void cpu_mem_init()
 {
 	cpu_mem_base = &cpu_mem[0];
+	
+#ifdef _DBG_FILL_MEMORY
+	//For debugging purposes, fill the memory with random values.
+	//We use a constant seed so values don't change accross runs, but still are random.
+	srand(123456);
+
+	for (int i = 0; i < CPU_MEM_SIZE; i++)
+	{
+		unsigned char value = (unsigned char) rand();
+		cpu_mem_set(i, value);
+	}
+#else
 	memset(cpu_mem_base, 0, CPU_MEM_SIZE);
+#endif
 }
 
 
