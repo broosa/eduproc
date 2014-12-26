@@ -6,7 +6,9 @@
 unsigned char cpu_mem[CPU_MEM_SIZE];
 unsigned char *cpu_mem_base;
 
-inline int cpu_mem_get_ptr(unsigned char *ptr, unsigned int offset)
+//Returns a pointer to the given offset in memory
+
+int cpu_mem_get_ptr(unsigned char *ptr, unsigned int offset)
 {
 	if (IS_INVALID_ADDR(offset))
 	{
@@ -17,7 +19,8 @@ inline int cpu_mem_get_ptr(unsigned char *ptr, unsigned int offset)
 	return SUCCESS;
 }
 
-inline int cpu_mem_set(unsigned int offset, unsigned char value)
+//Sets the value of the byte at address offset
+int cpu_mem_set(unsigned int offset, unsigned char value)
 {
 	if (IS_INVALID_ADDR(offset))
 	{
@@ -28,7 +31,8 @@ inline int cpu_mem_set(unsigned int offset, unsigned char value)
 	return SUCCESS;
 }
 
-inline int cpu_mem_set_multiple(unsigned int offset, unsigned char *src, unsigned int size)
+//Sets an arbitrary number of bytes in the virtual memory from a specified array of integers
+int cpu_mem_set_multiple(unsigned int offset, unsigned char *src, unsigned int size)
 {
 	if (IS_INVALID_ADDR(offset) || IS_INVALID_ADDR(offset + size))
 	{
@@ -36,7 +40,8 @@ inline int cpu_mem_set_multiple(unsigned int offset, unsigned char *src, unsigne
 	}
 }
 
-inline int cpu_mem_copy(unsigned int dst_offset, unsigned int src_offset, unsigned int size)
+//Copies an arbitrary number of bytes from src_offset to dst_offset
+int cpu_mem_copy(unsigned int dst_offset, unsigned int src_offset, unsigned int size)
 {
 	//Check if the memory regions overlap
 	if (IS_VALID_ADDR(src_offset) && IS_VALID_ADDR(dst_offset) && IS_VALID_ADDR(src_offset + size) &&
@@ -65,7 +70,7 @@ inline int cpu_mem_copy(unsigned int dst_offset, unsigned int src_offset, unsign
 	}
 }
 
-inline int cpu_mem_read(unsigned char *value, unsigned int offset) 
+int cpu_mem_read(unsigned char *value, unsigned int offset) 
 {
 	if (IS_INVALID_ADDR(offset)) 
 	{
@@ -76,7 +81,7 @@ inline int cpu_mem_read(unsigned char *value, unsigned int offset)
 	return SUCCESS;
 }
 
-inline int cpu_mem_read_multiple(unsigned char *dest, unsigned int offset, unsigned int size)
+int cpu_mem_read_multiple(unsigned char *dest, unsigned int offset, unsigned int size)
 {
 	if (IS_INVALID_ADDR(offset) || IS_INVALID_ADDR(offset + size))
 	{
