@@ -4,13 +4,13 @@
 #include "util.h"	
 
 //Reads a line from stdin, uses dynamic allocation for strings (Returns char *)
-char *stdin_read_line_dynamic(void)
+/*char *stdin_read_line_dynamic(void)
 {
 	char *dst = NULL;
 	size_t bytes_allocated = 0;
 	size_t bytes_read = getline(&dst, &bytes_allocated, stdin);
 	return dst;
-}
+}*/
 	
 //Reads a line from stdin, uses static allocation for strings
 int stdin_read_line(char *str, unsigned int max_bytes)
@@ -34,11 +34,11 @@ int stdin_read_line(char *str, unsigned int max_bytes)
 	return SUCCESS;
 }
 
-char *stdin_prompt_line_dynamic(const char *prompt)
+/*char *stdin_prompt_line_dynamic(const char *prompt)
 {
 	printf(prompt);
 	return stdin_read_line_dynamic();
-}
+}*/
 
 int stdin_prompt_line(const char *prompt, char *str, unsigned int max_bytes)
 {
