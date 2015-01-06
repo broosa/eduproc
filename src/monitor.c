@@ -1,5 +1,4 @@
 //Contains code for a (very) basic memory monitor
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -44,9 +43,8 @@ void cpu_monitor_start(void)
 		//Get the first non-whitespace character in the string. this is the command we want to run.
 		cmd_char = *cmd_start;
 
-		switch (cmd_char)
+		if (cmd_char == 'g')
 		{
-		case 'g':
 			//Skip the first token (this is the command string, we want the arguments only)
 			strtok(command, " ");
 				
@@ -67,7 +65,9 @@ void cpu_monitor_start(void)
 				
 			monitor_offset = new_offset;
 			break;
-		case 'd':
+		}
+		else if (cmd_char == 'd')
+		{
 			strtok(command, " ");
 				
 			char *dump_size_str = strtok(NULL, " ");
@@ -99,29 +99,37 @@ void cpu_monitor_start(void)
 			_display_dump(monitor_offset, dump_size);
 			break;
 			
-		case 'w':
-			/*char cmd_str_copy[strlen(command)];
-
+		}
+		else if (cmd_char == 'w')
+		{
+			
+			char *cmd_str_copy = malloc(strlen(command) + 1);			
 			strcpy(cmd_str_copy, command);
-
+			printf("%s", cmd_str_copy);
+			
 			//Discard the first token of the copied string
 			strtok(cmd_str_copy, " ");
 			int arg_count = 0;
 
 			//Count the number of arguments
-			while (strtok(NULL, " ") != null)
+			while (strtok(NULL, " ") != NULL)
 			{
 				arg_count++;
-				}*/
+			}
 
-			break;
-						
-		case 'q':
+			free(cmd_str_copy);
+ 
+			DEBUG_OUTPUT("DEBUG: Monitor found %d tokens for w command\n", arg_count);
+
+			strtok(command, " ");				
+		}
+		else if (cmd_char == 'q')
+		{
 			return;
-				
-		default:
+		}		
+		else
+		{
 			printf("SYNTAX ERROR\n");
-			break;
 		}			
 												
 	}
