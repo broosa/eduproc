@@ -7,7 +7,7 @@
 
 int main(char *argv[], int argc)
 {
-	cpu_monitor_start();
-	
-	return 0;
+    cpu_monitor_start();
+
+    return 0;
 }
