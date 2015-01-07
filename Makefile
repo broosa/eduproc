@@ -20,6 +20,8 @@ SRC = $(SRC_FILES:src/%=%)
 OBJ = $(SRC:.c=.o)
 OBJ_FILES = $(addprefix build/,$(OBJ))
 
+all: release
+
 build-setup:
 	@mkdir -p build
 
