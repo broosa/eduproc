@@ -69,15 +69,14 @@ void cpu_monitor_start(void)
 
             //Check to make sure that the address is valid (or that its a number at all)
             if (!IS_VALID_ADDR(new_offset)) {
-                printf("INVALID OFFSET: 0x%08x", new_offset);
-                break;
+                printf("INVALID OFFSET: 0x%08x\n", new_offset);
+                continue;
             } else if (new_offset == 0 && strcmp(offset_str, "0") != 0) {
-                printf("SYNTAX ERROR");
-                break;
+                printf("SYNTAX ERROR\n");
+				continue;
             }
 
             monitor_offset = new_offset;
-            break;
         } else if (cmd_char == 'd') {
             strtok(command, " ");
 
@@ -88,13 +87,13 @@ void cpu_monitor_start(void)
             if (dump_size_str != NULL) {
                 dump_size = _parse_int_arg(dump_size_str);
             } else {
-                printf("SYNTAX ERROR");
-                break;
+                printf("SYNTAX ERROR\n");
+                continue;
             }
 
             if (dump_size == 0) {
-                printf("INVALID DUMP SIZE");
-                break;
+                printf("INVALID DUMP SIZE\n");
+                continue;
             }
 
             //If the end of the dump goes past the end of our virtual memory space, truncate the output
@@ -102,13 +101,11 @@ void cpu_monitor_start(void)
                 dump_size = CPU_MEM_SIZE - monitor_offset;
             }
             _display_dump(monitor_offset, dump_size);
-            break;
 
         } else if (cmd_char == 'w') {
 
             char *cmd_str_copy = malloc(strlen(command) + 1);
             strcpy(cmd_str_copy, command);
-            printf("%s", cmd_str_copy);
 
             //Discard the first token of the copied string
             strtok(cmd_str_copy, " ");
@@ -121,13 +118,13 @@ void cpu_monitor_start(void)
 
             free(cmd_str_copy);
 
-            DEBUG_OUTPUT("DEBUG: Monitor found %d tokens for w command", arg_count);
+            DEBUG_OUTPUT("DEBUG: Monitor found %d tokens for w command\n", arg_count);
 
             strtok(command, " ");
         } else if (cmd_char == 'q') {
             return;
         } else {
-            printf("SYNTAX ERROR");
+            printf("SYNTAX ERROR\n");
         }
 
     }
@@ -151,8 +148,7 @@ void _display_dump(unsigned int offset, unsigned int size)
 
         //If we are at the end of a line, print a newline
         if (i % _DUMP_BYTES_PER_LINE == _DUMP_BYTES_PER_LINE - 1 || i == size - 1) {
-            printf("
-");
+            printf("\n");
         }
     }
 }

@@ -1,0 +1,47 @@
+EduProc Install Instructions
+
+-------------------------------------------------
+
+NOTE: This software is in very early stages; the build may and very likely will change often.
+
+---- Build Prerequisites ----
+
+  * a recent version of GCC
+  * libc standard libraries
+  * GNU make
+  * git (if you want to stay up to date with the bleeding edge)
+
+---- Downloading the source code ----
+
+Make sure you have a local copy of the repository
+
+ $ git clone http://github.com/violinuxer/eduproc
+
+This will download the latest source code a subdirectory of your current working directory
+
+Change into this new directory:
+
+ $ cd eduproc
+
+Run make to build the main binary:
+
+ $ make
+
+or
+
+ $ make release
+
+This generates the main executable: main.out. You can execute the following command to
+run the software:
+
+ $ ./main.out
+
+---- Staying Up to Date ----
+
+To get the latest version of the source code, execute a git pull:
+
+ $ git pull
+
+This will download any changes from the remote repository and update your local copy
+to the latest version.
+
