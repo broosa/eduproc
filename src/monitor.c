@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2014-2015 Byron Roosa
+ *
+ * Author contact info: <violinxuer@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 //Contains code for a (very) basic memory monitor
 #include <stdio.h>
 #include <string.h>
@@ -50,10 +69,10 @@ void cpu_monitor_start(void)
 
             //Check to make sure that the address is valid (or that its a number at all)
             if (!IS_VALID_ADDR(new_offset)) {
-                printf("INVALID OFFSET: 0x%08x\n", new_offset);
+                printf("INVALID OFFSET: 0x%08x", new_offset);
                 break;
             } else if (new_offset == 0 && strcmp(offset_str, "0") != 0) {
-                printf("SYNTAX ERROR\n");
+                printf("SYNTAX ERROR");
                 break;
             }
 
@@ -65,17 +84,16 @@ void cpu_monitor_start(void)
             char *dump_size_str = strtok(NULL, " ");
 
             int dump_size = 0;
-
             //If the string is null, then there was a syntax error
             if (dump_size_str != NULL) {
                 dump_size = _parse_int_arg(dump_size_str);
             } else {
-                printf("SYNTAX ERROR\n");
+                printf("SYNTAX ERROR");
                 break;
             }
 
             if (dump_size == 0) {
-                printf("INVALID DUMP SIZE\n");
+                printf("INVALID DUMP SIZE");
                 break;
             }
 
@@ -103,13 +121,13 @@ void cpu_monitor_start(void)
 
             free(cmd_str_copy);
 
-            DEBUG_OUTPUT("DEBUG: Monitor found %d tokens for w command\n", arg_count);
+            DEBUG_OUTPUT("DEBUG: Monitor found %d tokens for w command", arg_count);
 
             strtok(command, " ");
         } else if (cmd_char == 'q') {
             return;
         } else {
-            printf("SYNTAX ERROR\n");
+            printf("SYNTAX ERROR");
         }
 
     }
@@ -133,7 +151,8 @@ void _display_dump(unsigned int offset, unsigned int size)
 
         //If we are at the end of a line, print a newline
         if (i % _DUMP_BYTES_PER_LINE == _DUMP_BYTES_PER_LINE - 1 || i == size - 1) {
-            printf("\n");
+            printf("
+");
         }
     }
 }
