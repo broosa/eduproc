@@ -59,6 +59,13 @@ int cpu_mem_set_multiple(unsigned int offset, unsigned char *src, unsigned int s
     if (IS_INVALID_ADDR(offset) || IS_INVALID_ADDR(offset + size)) {
         return -ERR_MEM_OFFSET_INVALID;
     }
+    
+    char *dest = cpu_mem_base + offset;
+    
+    if (!memcpy(dest, src, size)) {
+    	return -ERR_MEM_SEGFAULT;
+    }
+    return SUCCESS;
 }
 
 //Copies an arbitrary number of bytes from src_offset to dst_offset

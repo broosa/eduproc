@@ -28,7 +28,9 @@
 
 #define _DUMP_BYTES_PER_LINE 16
 
+unsigned int _parse_hex(char *str);
 unsigned int _parse_int_arg(char *str);
+
 void _display_dump(unsigned int offset, unsigned int size);
 
 unsigned int monitor_offset;
@@ -44,7 +46,8 @@ void cpu_monitor_start(void)
     char prompt[12];
 
     char command[MONITOR_CMD_BUF_SIZE];
-
+	
+	//Main execution loop. This will eventually be shrunk down to size.
     while (1) {
         sprintf(prompt, "0x%08x> ", monitor_offset);
         stdin_prompt_line(prompt, command, MONITOR_CMD_BUF_SIZE);
@@ -119,8 +122,70 @@ void cpu_monitor_start(void)
             free(cmd_str_copy);
 
             DEBUG_OUTPUT("DEBUG: Monitor found %d tokens for w command\n", arg_count);
-
+			
+			//Discard the first token of the whole command
             strtok(command, " ");
+            
+            //Store whether user input was valid (needs to be more robust)
+            int input_invalid = 0;
+            
+            //TODO: Handle when more bytes are specified
+            //than there is space in memory better
+           	char data_bytes[arg_count];
+           
+           	if (IS_INVALID_ADDR(monitor_offset + arg_count)) {
+           		int overflow = monitor_offset + arg_count - CPU_MEM_SIZE;
+           		DEBUG_OUTPUT("DEBUG: Input overflows memory by %d bytes. Truncating extra bytes.\n", overflow);
+			}           	
+			
+      		for (int i = 0; i < arg_count; i++) {
+      			char *token = strtok(NULL, " ");
+      			
+      			if (strlen(token) != 2) {
+      				printf("INVALID BYTE LITERAL: %s\n", token);
+      				input_invalid = 1;
+      				break;
+      			}
+      			
+      			unsigned int token_value = _parse_hex(token);
+      			
+      			if (token_value == 0) {
+      				if (strcmp(token, "00") != 0) {
+      					printf("INVALID BYTE LITERAL: %s\n", token);
+		  				input_invalid = 1;
+		  				break;
+		  			}
+		  		}
+      			
+      			if (token_value > 255) {
+      				printf("INVALID BYTE LITERAL: %s\n", token);
+      				input_invalid = 1;
+      				break;
+      			}
+      			
+      			//Cast the byte to char. This might kill some significant digits
+      			//somewhere and should be handled better later.
+      			data_bytes[i] = (char) token_value;	
+      		}
+      		
+      		//Only process memory write if the user entered valid byte values
+      		if (!input_invalid) {
+      			
+      			//This funciton MAY NOT actually write all of the provided
+      			//bytes, especially if the user put in extra on the command
+      			//line. Any extras (At least for now) are ignored
+      			int write_size;
+      			
+      			if (IS_INVALID_ADDR(monitor_offset + arg_count)) {
+      				write_size = CPU_MEM_SIZE - monitor_offset;
+      			} else {
+      				write_size = arg_count;
+      			}
+      			
+      			DEBUG_OUTPUT("DEBUG: Writing %d bytes to memory.\n", write_size);
+      			cpu_mem_set_multiple(monitor_offset, data_bytes, write_size);
+      		}
+      			
         } else if (cmd_char == 'q') {
             return;
         } else {
@@ -151,6 +216,12 @@ void _display_dump(unsigned int offset, unsigned int size)
             printf("\n");
         }
     }
+}
+
+//TODO: Handle bad input better (invalid literals)
+unsigned int _parse_hex(char *str)
+{
+	return (unsigned int) strtoul(str, NULL, 16);
 }
 
 unsigned int _parse_int_arg(char *str)
