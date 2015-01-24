@@ -39,6 +39,11 @@
 
 void debug_output(char *str);
 
+//Splits a string on a specified delimiter (probably really slow)
+//Returns an array of pointers to the tokens within the
+//original string
+char **split_string(char *src, const char *del, int *count);
+	
 //char *stdin_read_line_dynamic(void);
 int stdin_read_line(char *str, unsigned int max_bytes);
 
