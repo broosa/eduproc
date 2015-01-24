@@ -21,7 +21,7 @@
 
 #Variable definitions
 
-CFLAGS := $(CFLAGS) -std=c99
+CFLAGS := $(CFLAGS) -std=c99 -ggdb
 
 SRC_DIR = src
 BUILD_DIR = build
