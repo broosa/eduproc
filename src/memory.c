@@ -23,7 +23,7 @@
 
 #include "memory.h"
 
-#define _DBG_FILL_MEMORY
+//#define _DBG_FILL_MEMORY
 
 //Declared in memory.h
 
