@@ -84,7 +84,7 @@ void cpu_monitor_start(void)
         cmd_char = *cmd_start;
         
         int token_count;
-        char **cmd_tokens = split_string(command, " ", &token_count);
+        char **cmd_tokens = split_args(command, &token_count);
         
         //Move on if the user didn't type anything in
         if (cmd_tokens == NULL) {

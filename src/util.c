@@ -32,6 +32,69 @@
 	return dst;
 }*/
 
+//Split a string into space-separated elements, but don't
+//Split sections of strings that are in quotes.
+char **split_args(char *str, int *count)
+{
+	int in_quotes = 0;
+	int token_count = 1;
+	
+	char **tokens = malloc(strlen(str) * sizeof(char *));
+	tokens[0] = str;
+	
+	//Store the length of the original string separately because we are 
+	//modifying the string in place
+	int str_length = strlen(str);
+
+	for (int i = 0; i < str_length; i++) {
+		char curr_char = str[i];
+		
+		//If we encounter a quote, change wether we are in or out of a quote
+		if (curr_char == '"') {
+			
+			if (!in_quotes && i < str_length) {
+				tokens[token_count] = &str[i + 1];
+				token_count++;
+			}
+			
+			in_quotes = in_quotes == 0 ? 1 : 0;
+			str[i] = 0;
+			
+			continue;
+		}
+		
+		//If we are inside of a quote, then continue until we reach another
+		//double quote character
+		if (in_quotes) {
+			continue;
+		}
+		
+		if (curr_char == ' ' && i < strlen(str) - 1) {
+			
+			//Count multiple spaces as one
+			int space_index = i;
+			
+			while (str[space_index + 1] == ' ') {
+				str[space_index] = 0;
+				space_index++;
+			}
+			
+			str[space_index] = 0;
+			
+			//If the next character is a quote, then we don't need to add the token.
+			//It will get added when the state machine reaches the quote character. 
+			//The first character after the double quote will eventually become the
+			// start of the next token.
+			if (str[space_index + 1] != '"') {
+				tokens[token_count] = &str[space_index + 1];
+				token_count++;
+			}
+		}
+	}
+	
+	*count = token_count;
+	return tokens;
+}
 //Splits a string on a specified delimiter (probably really slow)
 //Returns an array of pointers to the tokens within the
 //original string

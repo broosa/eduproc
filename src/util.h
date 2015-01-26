@@ -39,6 +39,8 @@
 
 void debug_output(char *str);
 
+char **split_args(char *str, int *count);
+
 //Splits a string on a specified delimiter (probably really slow)
 //Returns an array of pointers to the tokens within the
 //original string
