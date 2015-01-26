@@ -3,3 +3,5 @@ build/*
 *~
 *.out
 *.swp
+EduProc.project
+EduProc.workspace

@@ -19,9 +19,14 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <time.h>
+#include <errno.h>
 
+#include "util.h"
 #include "memory.h"
+
+#define FILE_IO_BLOCK_SIZE 1024
 
 //#define _DBG_FILL_MEMORY
 
@@ -29,6 +34,8 @@
 
 unsigned char cpu_mem[CPU_MEM_SIZE];
 unsigned char *cpu_mem_base;
+
+int cpu_mem_errno;
 
 //Returns a pointer to the given offset in memory
 
@@ -46,11 +53,11 @@ int cpu_mem_get_ptr(unsigned char *ptr, unsigned int offset)
 int cpu_mem_set(unsigned int offset, unsigned char value)
 {
     if (IS_INVALID_ADDR(offset)) {
-        return -ERR_MEM_OFFSET_INVALID;
+        return ERR_MEM_OFFSET_INVALID;
     }
 
     *(cpu_mem_base + offset) = value;
-    return SUCCESS;
+    return -SUCCESS;
 }
 
 //Sets an arbitrary number of bytes in the virtual memory from a specified array of integers
@@ -111,6 +118,48 @@ int cpu_mem_read_multiple(unsigned char *dest, unsigned int offset, unsigned int
     return SUCCESS;
 }
 
+//Loads the contents of the given filename into memory at the given offset (if space permits)
+int cpu_mem_load_file(char *filename, int offset)
+{
+	//Opens the file for reading
+	FILE *file_ptr = fopen(filename, "r");
+	if (file_ptr == NULL) {
+		cpu_mem_errno = errno;
+		return -ERR_MEM_FILE_IO;
+	}
+	
+	//Find the size of the file
+	fseek(file_ptr, 0L, SEEK_END);
+	int file_size = ftell(file_ptr);
+	//Seek back to the beginning of the file
+	fseek(file_ptr, 0L, SEEK_SET);
+	
+	if (IS_INVALID_ADDR(offset + file_size)) {
+		fclose(file_ptr);
+		return -ERR_MEM_FILE_TOO_BIG;
+	}
+	
+	//Set up a buffer for future file io
+	unsigned char data[FILE_IO_BLOCK_SIZE] = {0};
+	
+	
+	int bytes_read = fread(data, sizeof(char), FILE_IO_BLOCK_SIZE, file_ptr);
+
+	while (bytes_read != 0) {
+
+		int write_result = cpu_mem_set_multiple(offset, data, bytes_read);
+		bytes_read = fread(data, sizeof(char), FILE_IO_BLOCK_SIZE, file_ptr);
+
+		if (write_result != SUCCESS) {
+			DEBUG_OUTPUT("WARNING: IO FAILED!\n");
+			fclose(file_ptr);
+			return write_result;
+		}
+	}
+	fclose(file_ptr);
+	return SUCCESS;
+}		
+	
 void cpu_mem_init()
 {
     cpu_mem_base = &cpu_mem[0];
@@ -122,7 +171,7 @@ void cpu_mem_init()
 
     for (int i = 0; i < CPU_MEM_SIZE; i++) {
         unsigned char value = (unsigned char) rand();
-        cpu_mem_set(i, value);
+        cpu_mem_set(cpu_mem_base + i, value);
     }
 #else
     memset(cpu_mem_base, 0, CPU_MEM_SIZE);

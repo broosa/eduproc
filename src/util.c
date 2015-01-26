@@ -69,7 +69,7 @@ char **split_args(char *str, int *count)
 			continue;
 		}
 		
-		if (curr_char == ' ' && i < strlen(str) - 1) {
+		if (curr_char == ' ' && i < str_length - 1) {
 			
 			//Count multiple spaces as one
 			int space_index = i;

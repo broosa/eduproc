@@ -32,12 +32,14 @@
 #define _CMD_ERR_INVALID_INT_LITERAL -3
 #define _CMD_ERR_INVALID_BYTE_LITERAL -4
 #define _CMD_ERR_OFFSET_INVALID -5
+#define _CMD_ERR_IO_ERROR -6
 
 #define _DUMP_BYTES_PER_LINE 16
 
 int _monitor_cmd_goto(char *argv[], int argc);
 int _monitor_cmd_dump(char *argv[], int argc);
 int _monitor_cmd_write(char *argv[], int argc);
+int _monitor_cmd_load_file(char *argv[], int argc);
 int _monitor_cmd_exit(char *argv[], int argc);
 
 unsigned int _parse_hex(char *str);
@@ -80,7 +82,8 @@ void cpu_monitor_start(void)
             cmd_start++;
         }
 
-        //Get the first non-whitespace character in the string. this is the command we want to run.
+        //Get the first non-whitespace character in the string. this is the 
+		//command we want to run.
         cmd_char = *cmd_start;
         
         int token_count;
@@ -104,6 +107,8 @@ void cpu_monitor_start(void)
 			cmd_result = _monitor_cmd_dump(cmd_args, arg_count);
         } else if (cmd_char == 'w') {
             cmd_result = _monitor_cmd_write(cmd_args, arg_count);
+		} else if (cmd_char == 'l') {
+			cmd_result = _monitor_cmd_load_file(cmd_args, arg_count);
         } else if (cmd_char == 'q') {
         	free(cmd_tokens);
             return;
@@ -124,6 +129,8 @@ void cpu_monitor_start(void)
 				printf("INVALID LITERAL FOR BYTE: %s\n", cmd_err_token);
 			} else if (cmd_result == _CMD_ERR_OFFSET_INVALID) {
 				printf("INVALID MEMORY OFFSET: 0x%08x\n", cmd_err_offset);
+			} else if (cmd_result == _CMD_ERR_IO_ERROR) {
+				printf("ERROR READING FILE: %s (ERR: %d)\n", cmd_err_token, cmd_err);
 			}
 		}
     }
@@ -143,10 +150,12 @@ int _monitor_cmd_goto(char *argv[], int argc)
     if (new_offset == 0) {
     	char *token = offset_token;
     	while (*token != 0) {
-    		if (*token != '0' || *token != 'x') {
+    		if (*token != '0' && *token != 'x') {
 				cmd_err_token = argv[0];
 				return _CMD_ERR_INVALID_INT_LITERAL;
 			}
+			
+			token++;
 		}
     } else if (!IS_VALID_ADDR(new_offset)) {
         cmd_err_offset = new_offset;
@@ -170,7 +179,8 @@ int _monitor_cmd_dump(char *argv[], int argc)
         return _CMD_ERR_INVALID_INT_LITERAL;
     }
 	
-	//If the end of the dump goes past the end of our virtual memory space, truncate the output
+	//If the end of the dump goes past the end of our virtual memory space, 
+	//truncate the output
     if (monitor_offset + dump_size > CPU_MEM_SIZE) {
         dump_size = CPU_MEM_SIZE - monitor_offset;
     }
@@ -192,6 +202,11 @@ int _monitor_cmd_write(char *argv[], int argc)
 	int input_invalid = 0;
 	
 	if (first_token[0] == '@') {
+		
+		//Make sure that 
+		if (argc == 1) {
+			return _CMD_ERR_ARG_COUNT;
+		}
 		offset_token = first_token + 1;
 		
 		write_offset = _parse_int_arg(offset_token);
@@ -245,19 +260,68 @@ int _monitor_cmd_write(char *argv[], int argc)
 		data_bytes[i] = (unsigned char) token_value;	
 	}
 	
-	//Make sure that the memory manager does not write past the end of the emulated memory
+	//Make sure that the memory manager does not write past the end of 
+	//the emulated memory
 	int write_size = 0;
 	if (write_offset + argc > CPU_MEM_SIZE) {
-		DEBUG_OUTPUT("DEBUG: Requested write goes out of bounds. Truncating.\n");
+		DEBUG_OUTPUT("DEBUG: Write goes out of bounds. Truncating.\n");
 		write_size = CPU_MEM_SIZE - write_offset;
 	} else {
 		write_size = argc;
 	}
 	
 	cpu_mem_set_multiple(write_offset, data_bytes, write_size);
+	return SUCCESS;
 }
 
-int _monitor_cmd_exit(char **argv, int argc)
+int _monitor_cmd_load_file(char *argv[], int argc)
+{
+	if (argc < 1 || argc > 2) {
+		return _CMD_ERR_ARG_COUNT;
+	}
+	
+	char *first_token = argv[0];
+	char *offset_token = NULL;
+
+	char *filename = NULL;
+
+	int write_offset = 0;
+	if (first_token[0] == '@') {
+		offset_token = &first_token[1];
+
+		write_offset = _parse_int_arg(offset_token);
+		filename = argv[1];		
+		if (write_offset == 0) {
+			//Did the user really enter "0" or "0x000...0"?
+			while (*first_token != 0) {
+				if (*first_token != '0' && *first_token != 'x') {
+					cmd_err_token = first_token;
+					return _CMD_ERR_INVALID_INT_LITERAL;
+				}
+				
+				first_token++;
+			}
+		}
+	} else {
+		write_offset = monitor_offset;
+		filename = argv[0];
+	}
+	
+	DEBUG_OUTPUT("DEBUG: Writing from %s to location %x.\n", filename, write_offset);
+
+	int result = cpu_mem_load_file(filename, write_offset);
+
+	if (result != SUCCESS) {
+		cmd_err = result;
+		cmd_err_token = filename;
+		return _CMD_ERR_IO_ERROR;
+	} else {
+		return SUCCESS;
+	}
+}
+
+
+int _monitor_cmd_exit(char *argv[], int argc)
 {
 	//Cleanup will go in here later
 }
@@ -278,7 +342,8 @@ void _display_dump(unsigned int offset, unsigned int size)
         printf(" %02x", mem_value);
 
         //If we are at the end of a line, print a newline
-        if (i % _DUMP_BYTES_PER_LINE == _DUMP_BYTES_PER_LINE - 1 || i == size - 1) {
+        if (i % _DUMP_BYTES_PER_LINE == _DUMP_BYTES_PER_LINE - 1 
+        		|| i == size - 1) {
             printf("\n");
         }
     }
