@@ -20,6 +20,27 @@
 #ifndef _CPU_H_INCLUDED
 #define _CPU_H_INCLUDED
 
+#define NUM_REGISTERS 16
+
+#define SP_REG_INDEX 13
+#define LR_REG_INDEX 14
+#define PC_REG_INDEX 15
+
 #define CPU_ARCH_RISC 1
+
+//Find whether the nth least signfigant bit is et
+#define BIT_SET(value, n) (value & (1 << (n))
+
+typedef struct {
+	unsigned int regs[NUM_REGISTERS];
+	unsigned int pc;
+	unsigned int lr;
+	unsigned int sp;
+	unsigned int sr;
+} cpu_reg_state;
+
+extern cpu_reg_state * const last_state;
+
+cpu_reg_state *cpu_get_last_reg_state(void);
 
 #endif
