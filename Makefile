@@ -1,75 +1,50 @@
-#
-# Copyright (c) 2014-2015 Byron Roosa
-#
-# Author contact info: <violinxuer@gmail.com>
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or (at
-# your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this software.  If not, see <http://www.gnu.org/licenses/>.
-#
+CC = gcc
 
-#NOTE: THIS FILE IS A WORK IN PROGRESS. THIS NEEDS A LOT OF CLEANING UP
-
-#Variable definitions
-
-CFLAGS := $(CFLAGS) -std=c99 -ggdb
+CFLAGS := $(CFLAGS) -Wall -ggdb -std=c99
 
 SRC_DIR = src
 BUILD_DIR = build
-
-RELEASE_SRC = src/main.c
-TEST_SRC = src/main_test.c
-
-RELEASE_EXE = main.out
-TEST_EXE = main_test.out
+BIN_DIR = bin
 
 DEPS_FILE = build/deps.d
 
-SRC_FILES = $(wildcard src/*.c)
+LIBS = 
+
+TARGET_FILE_NAMES = src/main.c src/main_test.c
+
+SRC_FILES = $(filter-out $(TARGET_FILE_NAMES),$(wildcard src/*.c))
+
 SRC = $(SRC_FILES:src/%=%)
-OBJ = $(SRC:.c=.o)
-OBJ_FILES = $(addprefix build/,$(OBJ))
+OBJ = $(SRC:%.c=%.o)
+OBJ_FILES = $(addprefix $(BUILD_DIR)/,$(OBJ))
 
 all: release
 
 build-setup:
+
 	@mkdir -p build
+	@mkdir -p bin
 
-generate-depends:
-	gcc $(CFLAGS) -MM -MP -MF $(DEPS_FILE) $(SRC_FILES)
+build-depends:
+	$(CC) $(CFLAGS) -MM -MP -MF $(DEPS_FILE) $(SRC_FILES)
 
-#Depends on all object files excpet for the one that contains the test main method
-#This is hacky. Fix later.
-build-release: $(filter-out $(TEST_SRC:src/%.c=build/%.o), $(OBJ_FILES))
-	gcc $(CFLAGS) -o $(RELEASE_EXE) $^
+build-exe: $(OBJ_FILES)
+	$(CC) $(CFLAGS) -pg -o $(BIN_DIR)/$(notdir $(TGT_SRC:%.c=%)) $(TGT_SRC) $^ $(LIBS)
 
-#Same for test. Includes all .o files except for the one that contains the release
-#executable entry point. 
-build-test: $(filter-out $(RELEASE_SRC:src/%.c=build/%.o), $(OBJ_FILES)) 
-	gcc $(CFLAGS) -o $(TEST_EXE) $^
-	
-release: build-setup generate-depends build-release
+setup: build-setup build-depends
 
-test: build-setup generate-depends build-test
+release: override TGT_SRC = src/main.c
+release: setup build-exe
 	
 -include $(DEPS_FILE)
 
 clean:
+	rm -rf ./bin/*
 	rm -rf ./build/*
-	
-%.c: %.o
+	rm -rf ./*.out
 
-$(BUILD_DIR)/%.o: src/%.c
-	gcc $(CFLAGS) -c -o "$@" $^
-	
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
+	$(CC) $(CFLAGS) -c -o "$@" $^ $(LIBS)
+
 redo: clean
 	main 

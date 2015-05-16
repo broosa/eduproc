@@ -24,7 +24,7 @@
 #include "monitor.h"
 #include "cpu.h"
 
-int main(char *argv[], int argc)
+int main(int argc, char **argv)
 {
     cpu_monitor_start();
 

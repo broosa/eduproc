@@ -6,3 +6,7 @@ build/*
 EduProc.project
 EduProc.workspace
 .codelite
+
+bin/*
+.cproject
+.project
