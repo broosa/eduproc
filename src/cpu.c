@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <limits.h>
 
 #include "cpu.h"
 #include "cpu_opcodes.h"
@@ -129,13 +130,37 @@ void cpu_do_step(void)
         switch (op_code) {
         
         case CPU_OP_STR:
+            unsigned int data = *op_r1;
+            cpu_mem_set(data_addr, data);
+            break;
+        case CPU_OP_LDR:
+            unsigned int data;
+            cpu_mem_read(&data, data_addr);
+            *op_r1 = data;
+            break;
         default:
         }
     } else if (op_type == CPU_OPTYPE_ARITH) {
+        unsigned int op1 = *op_r2
+        
+        unsigned int op2 = 0;
+        if (BIT_SET(op_flags, OPFLAG_BIT_ARITH_IMD)) {
+            op2 = op_data;
+        } else {
+            op2 = *op_r3;
+        }
+        
+        unsigned int result;
+        
+        switch (op_code) {
+        
+        case CPU_OP_ADD:
+            result = 
     } else if (op_type == CPU_OPTYPE_BIT_ARITH) {
     } else if (op_type == CPU_OPTYPE_COMPARE) {
     }
-    load_offset += 8
+    //Update the program counter
+    *pc += 8
 }   
 
 void cpu_init(void)
@@ -146,6 +171,46 @@ void cpu_init(void)
 void cpu_reset(void) 
 {
 
+}
+
+void _cpu_do_op_arith(unsigned char op_code, unsigned char op_flags, 
+                    unsigned int *dest, unsigned int op1, unsigned int op2)
+{
+    unsigned int result;
+    switch (op_code) {
+    case CPU_OP_ADD:
+        if (op2 > UINT_MAX - op1) {
+            if (BIT_SET(op_flags, OPFLAG_BIT_SETS_STATUS)) {
+                cnd_c = 1;
+            }
+        }
+    
+        result = op1 + op2;
+        break;
+    case CPU_OP_SUB:
+        result = op2 - op1;
+        break;
+    case CPU_OP_RSUB:
+        result = op1 - op2;
+        break;
+    case CPU_OP_MUL:
+        if (op2 > UINT_MAX / r1) {
+            if (BIT_SET(op_flags, OPFLAG_BIT_SETS_STATUS)) {
+                cnd_c = 1;
+            }
+        }
+        result = op1 * op2;
+        break;
+        
+    }
+    
+    if (BIT_SET(op_flags, OPFLAG_BIT_SETS_STATUS)) {
+        cnd_z = ~(result & 1);
+        cnd_n = ~(result >> 31);
+        //A signed overflow occurred (both operands had the same sign
+        //bit but the result had a different sign bit
+        cnd_v = ((op1 >> 31) == (op2 >> 31)) && ((op1 >> 31) != (result >> 31));  
+    }
 }
 
 //Computes the final address of data in memory given a certain address mode
