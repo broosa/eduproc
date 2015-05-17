@@ -86,6 +86,10 @@
 //If low bit of opflags is set, JMP will set the link register
 #define OPFLAG_BIT_MEM_SET_LINK 0
 
+//Arithmetic opflags
+#define OPFLAG_BIT_ARITH_IMD
+#define OPFLAG_BIT_ARITH_CARRY
+
 //ADDRESS MODE BITS
 //Is the data indirect?
 #define ADDR_MODE_BIT_IND 3
