@@ -22,6 +22,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "cpu.h"
 #include "monitor.h"
 #include "util.h"
 #include "memory.h"
@@ -40,12 +41,15 @@ int _monitor_cmd_goto(char *argv[], int argc);
 int _monitor_cmd_dump(char *argv[], int argc);
 int _monitor_cmd_write(char *argv[], int argc);
 int _monitor_cmd_load_file(char *argv[], int argc);
+int _monitor_cmd_cpu_control(char *argv[], int argc);
+
 int _monitor_cmd_exit(char *argv[], int argc);
 
 unsigned int _parse_hex(char *str);
 unsigned int _parse_int_arg(char *str);
 
-void _display_dump(unsigned int offset, unsigned int size);
+void _display_memory(unsigned int offset, unsigned int size);
+void _display_cpu_state(void);
 
 unsigned int monitor_offset;
 
@@ -59,6 +63,10 @@ void cpu_monitor_start(void)
     cpu_mem_init();
 
     monitor_offset = MONITOR_OFFSET_DEFAULT;
+
+    //Display the initial cpu state on screen
+    cpu_init();
+    _display_cpu_state();
 
     //Set up a contextual prompt to show
     char prompt[12];
@@ -112,6 +120,8 @@ void cpu_monitor_start(void)
         } else if (cmd_char == 'q') {
         	free(cmd_tokens);
             return;
+        } else if (cmd_char == 'c') {
+        	cmd_result = _monitor_cmd_cpu_control(cmd_args, arg_count);
         } else {
             printf("UNKOWN COMMAND\n");
         }
@@ -184,7 +194,9 @@ int _monitor_cmd_dump(char *argv[], int argc)
     if (monitor_offset + dump_size > CPU_MEM_SIZE) {
         dump_size = CPU_MEM_SIZE - monitor_offset;
     }
-    _display_dump(monitor_offset, dump_size);
+    _display_memory(monitor_offset, dump_size);
+
+    return _CMD_SUCCESS;
 }
 
 int _monitor_cmd_write(char *argv[], int argc)
@@ -270,7 +282,7 @@ int _monitor_cmd_write(char *argv[], int argc)
 		write_size = argc;
 	}
 	
-	cpu_mem_set_multiple(write_offset, data_bytes, write_size);
+	cpu_mem_write_multiple(write_offset, data_bytes, write_size);
 	return SUCCESS;
 }
 
@@ -320,19 +332,69 @@ int _monitor_cmd_load_file(char *argv[], int argc)
 	}
 }
 
+int _monitor_cmd_cpu_control(char *argv[], int argc) {
+	if (argc < 1) {
+		return _CMD_ERR_ARG_COUNT;
+	}
+
+	char *control_cmd = argv[0];
+
+	if (!strcmp(control_cmd, "disp")) {
+		_display_cpu_state();
+	} else if (!strcmp(control_cmd, "step")) {
+		cpu_do_step();
+		_display_cpu_state();
+	} else if (!strcmp(control_cmd, "reset")) {
+		cpu_reset();
+	}
+
+	return _CMD_SUCCESS;
+}
+
 
 int _monitor_cmd_exit(char *argv[], int argc)
 {
-	//Cleanup will go in here later
+	return _CMD_SUCCESS;
 }
 
-void _display_dump(unsigned int offset, unsigned int size)
+void _display_cpu_state(void) {
+
+	//Display onscreen the last state of the CPU
+	//This includes the state of any registers and the last instruction
+	//data that was processed.
+	cpu_reg_state *cpu_state = cpu_get_last_reg_state();
+
+	//Display the registers on screen in two columns
+	for (int i = 0; i < CPU_NUM_REGISTERS / 2; i++) {
+		printf("r%02d: 0x%08x r%02d: 0x%08x\n", i, (cpu_state->regs)[i],
+				i + CPU_NUM_REGISTERS / 2,
+				(cpu_state->regs)[i + CPU_NUM_REGISTERS / 2]);
+	}
+	printf("\n");
+
+	printf("pc: 0x%08x lr: 0x%08x sp: 0x%08x\n", cpu_state->pc, cpu_state->lr,
+			cpu_state->sp);
+	printf("\n");
+	printf("z: %01d c: %01d n: %01d v: %01d\n", cpu_state->cnd_z,
+			cpu_state->cnd_c, cpu_state->cnd_v, cpu_state->cnd_v);
+	printf("\n");
+	printf("instr: ");
+
+	for (int j = 0; j < INSTR_LEN; j++) {
+		printf("%02x ", cpu_state->last_instr[j]);
+	}
+
+	printf("\n");
+	printf("\n");
+}
+
+void _display_memory(unsigned int offset, unsigned int size)
 {
     for (int i = 0; i < size; i++) {
         unsigned int read_offset = offset + i;
         unsigned char mem_value;
 
-        cpu_mem_read(&mem_value, read_offset);
+        cpu_mem_read_byte(&mem_value, read_offset);
 
         //At the beginning of the line, print the offset at the initial spot
         if (i % _DUMP_BYTES_PER_LINE == 0) {

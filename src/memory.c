@@ -37,6 +37,9 @@ unsigned char *cpu_mem_base;
 
 int cpu_mem_errno;
 
+inline unsigned int _unpack_word(unsigned char *buf);
+inline unsigned int _pack_word(unsigned char *buf, unsigned int value);
+
 //Returns a pointer to the given offset in memory
 
 int cpu_mem_get_ptr(unsigned char *ptr, unsigned int offset)
@@ -50,7 +53,7 @@ int cpu_mem_get_ptr(unsigned char *ptr, unsigned int offset)
 }
 
 //Sets the value of the byte at address offset
-int cpu_mem_set(unsigned int offset, unsigned char value)
+int cpu_mem_write_byte(unsigned int offset, unsigned char value)
 {
     if (IS_INVALID_ADDR(offset)) {
         return ERR_MEM_OFFSET_INVALID;
@@ -61,7 +64,7 @@ int cpu_mem_set(unsigned int offset, unsigned char value)
 }
 
 //Sets an arbitrary number of bytes in the virtual memory from a specified array of integers
-int cpu_mem_set_multiple(unsigned int offset, unsigned char *src, unsigned int size)
+int cpu_mem_write_multiple(unsigned int offset, unsigned char *src, unsigned int size)
 {
     if (IS_INVALID_ADDR(offset) || IS_INVALID_ADDR(offset + size)) {
         return -ERR_MEM_OFFSET_INVALID;
@@ -98,7 +101,7 @@ int cpu_mem_copy(unsigned int dst_offset, unsigned int src_offset, unsigned int 
     }
 }
 
-int cpu_mem_read(unsigned char *value, unsigned int offset)
+int cpu_mem_read_byte(unsigned char *value, unsigned int offset)
 {
     if (IS_INVALID_ADDR(offset)) {
         return -ERR_MEM_OFFSET_INVALID;
@@ -108,13 +111,25 @@ int cpu_mem_read(unsigned char *value, unsigned int offset)
     return SUCCESS;
 }
 
+int cpu_mem_read_word(unsigned int *dest, unsigned int offset) {
+
+	if (IS_INVALID_ADDR(offset) || IS_INVALID_ADDR(offset + MEM_WORD_SIZE)) {
+		return -ERR_MEM_OFFSET_INVALID;
+	}
+
+	unsigned char *word_base = CPU_MEM_PTR(offset);
+	*dest = _unpack_word(word_base);
+
+	return SUCCESS;
+}
+
 int cpu_mem_read_multiple(unsigned char *dest, unsigned int offset, unsigned int size)
 {
     if (IS_INVALID_ADDR(offset) || IS_INVALID_ADDR(offset + size)) {
         return -ERR_MEM_OFFSET_INVALID;
     }
 
-    *dest = *(cpu_mem_base + offset);
+    memcpy(dest, CPU_MEM_PTR(offset), size * sizeof(unsigned char));
     return SUCCESS;
 }
 
@@ -147,7 +162,7 @@ int cpu_mem_load_file(char *filename, int offset)
 
 	while (bytes_read != 0) {
 
-		int write_result = cpu_mem_set_multiple(offset, data, bytes_read);
+		int write_result = cpu_mem_write_multiple(offset, data, bytes_read);
 		bytes_read = fread(data, sizeof(char), FILE_IO_BLOCK_SIZE, file_ptr);
 
 		if (write_result != SUCCESS) {
@@ -171,9 +186,35 @@ void cpu_mem_init()
 
     for (int i = 0; i < CPU_MEM_SIZE; i++) {
         unsigned char value = (unsigned char) rand();
-        cpu_mem_set(cpu_mem_base + i, value);
+        cpu_mem_write_byte(cpu_mem_base + i, value);
     }
 #else
     memset(cpu_mem_base, 0, CPU_MEM_SIZE);
 #endif
+}
+
+//Unpacks an integer from an array of unsigned chars
+//Accounts on whether emulated processor is big or little endian
+inline unsigned int _unpack_word(unsigned char *buf)
+{
+#if MEM_BIG_ENDIAN
+    return ((unsigned int) buf[0] << 24) & ((unsigned int) buf[1] << 16)
+                    & ((unsigned int) buf[2] << 8)
+                    & ((unsigned int) buf[3]);
+#else
+    return ((unsigned int) buf[0]) & ((unsigned int) buf[1] << 8)
+                    & ((unsigned int) buf[2] << 16)
+                    & ((unsigned int) buf[3] << 24);
+#endif
+}
+
+inline unsigned int _pack_word(unsigned char *buf, unsigned int value)
+{
+	for (int i = 0; i < MEM_WORD_SIZE; i++) {
+#if MEM_BIG_ENDIAN
+		buf[i] = (unsigned char) ((value >> ((3 - i) * 8)) & 0xff);
+#else
+		buf[i] = (unsigned char) ((value >> (i * 8)) & 0xff);
+#endif
+	}
 }

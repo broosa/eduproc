@@ -9,9 +9,9 @@
 #define CPU_OPTYPE_BIT_ARITH 0x30
 #define CPU_OPTYPE_COMPARE 0x40
 
-#define OPFLAG_BIT_SETS_STATUS 3
+#define OPFLAG_SETS_STATUS 3
 
-//No Operation
+	//No Operation
 #define CPU_OP_NOP 0x01
 #define CPU_OP_INT 0x02
 //MEMORY OPERATIONS
@@ -79,16 +79,16 @@
 #define CPU_OP_TST 0x41
 
 //Memory instruction opflags
-#define OPFLAG_BIT_MEM_PROC 2
-#define OPFLAG_BIT_MEM_INC 1
-#define OPFLAG_BIT_MEM_POST 0
+#define OPFLAG_MEM_PROC 2
+#define OPFLAG_MEM_INC 1
+#define OPFLAG_MEM_POST 0
 
 //If low bit of opflags is set, JMP will set the link register
-#define OPFLAG_BIT_MEM_SET_LINK 0
+#define OPFLAG_MEM_SET_LINK 0
 
 //Arithmetic opflags
-#define OPFLAG_BIT_ARITH_IMD
-#define OPFLAG_BIT_ARITH_CARRY
+#define OPFLAG_ARITH_IMD 1
+#define OPFLAG_ARITH_CARRY 0
 
 //ADDRESS MODE BITS
 //Is the data indirect?
