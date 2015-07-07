@@ -1,0 +1,3 @@
+[submodule "tools/eduproc-asm"]
+	path = tools/eduproc-asm
+	url = https://github.com/violinuxer/eduproc-asm
