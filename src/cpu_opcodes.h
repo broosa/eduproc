@@ -11,7 +11,7 @@
 
 #define OPFLAG_SETS_STATUS 3
 
-	//No Operation
+//No Operation
 #define CPU_OP_NOP 0x01
 #define CPU_OP_INT 0x02
 //MEMORY OPERATIONS

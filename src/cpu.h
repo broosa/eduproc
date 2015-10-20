@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or (at
  * your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this software.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -41,18 +41,18 @@
 #define OPFLAG_SET(op_flags, flags) BIT_SET(op_flags, flags)
 
 typedef struct {
-	unsigned int regs[CPU_NUM_REGISTERS];
-	unsigned int pc;
-	unsigned int lr;
-	unsigned int sp;
-	unsigned int sr;
-	
-	unsigned short int cnd_z;
-	unsigned short int cnd_c;
-	unsigned short int cnd_n;
-	unsigned short int cnd_v;
+    unsigned int regs[CPU_NUM_REGISTERS];
+    unsigned int pc;
+    unsigned int lr;
+    unsigned int sp;
+    unsigned int sr;
 
-	unsigned char last_instr[INSTR_LEN];
+    unsigned short int cnd_z;
+    unsigned short int cnd_c;
+    unsigned short int cnd_n;
+    unsigned short int cnd_v;
+
+    unsigned char last_instr[INSTR_LEN];
 } cpu_reg_state;
 
 extern cpu_reg_state * const last_state;
