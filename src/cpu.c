@@ -47,10 +47,13 @@ unsigned char cnd_v = 0;
 
 inline unsigned int _unpack_word(unsigned char *buf);
 unsigned int _map_mem_addr(unsigned char addr_mode, unsigned int r2,
-                           unsigned int r3, unsigned int data);
+                    unsigned int r3, unsigned int data);
 
 void _cpu_do_op_arith(unsigned char op_code, unsigned char op_flags,
-                      unsigned int *dest, unsigned int op1, unsigned int op2);
+                    unsigned int *dest, unsigned int op1, unsigned int op2);
+
+void _cpu_do_op_bit_arith(unsigned char op_code, unsigned char op_flags,
+                    unsigned int *dest, unsigned int op1, unsigned int op2);   
 
 cpu_reg_state *cpu_get_last_reg_state(void)
 {
@@ -269,6 +272,35 @@ void _cpu_do_op_arith(unsigned char op_code, unsigned char op_flags,
     *dest = result;
 }
 
+void _cpu_do_op_bit_arith(unsigned char op_code, unsigned char op_flags,
+                    unsigned int *dest, unsigned int op1, unsigned int op2) {
+    unsigned int result;
+    switch (op_code) {
+    case CPU_OP_SL:
+        if (op2 > 0) {        
+            unsigned int temp = op1 << (op2 - 1);
+            //Set the carry bit based on the most significant bit of the number,
+            //when it's shifted by one less than what was desired
+            cnd_c = (temp >> 31) & 1;
+        } else {
+            cnd_c = 0;
+        }
+        result = op1 << op2;
+        
+    case CPU_OP_SR:
+        
+        if (op2 > 0) {        
+            unsigned int temp = op1 << (op2 - 1);
+            //Set the carry bit based on the least significant bit of the number,
+            //when it's shifted by one less than what was desired
+            cnd_c = temp & 1;
+            result = op1 >> op2;
+        } else {
+            cnd_c = 0;
+        }
+        result = op1 >> op2;
+    }
+}
 //Computes the final address of data in memory given a certain address mode
 //and base/offset registers
 unsigned int _map_mem_addr(unsigned char addr_mode, unsigned int r2,
